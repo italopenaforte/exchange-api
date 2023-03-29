@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 export class Currencies {
   currency: string;
+  value: number;
 }
 
 export class CurrenciesRepository {
