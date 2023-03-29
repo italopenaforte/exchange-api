@@ -11,14 +11,16 @@ export class ExchangeService {
     this.currenciesService = currenciesService;
   }
 
-  async convertAmout({ from, to, amout }): Promise<any> {
-    if (!from || !to || !amout) {
+  async convertAmount({ from, to, amount }): Promise<any> {
+    if (!from || !to || !amount) {
       throw new BadRequestException();
     }
 
     try {
       const currencieFrom = await this.currenciesService.getCurrency(from);
       const currencieTo = await this.currenciesService.getCurrency(to);
+
+      return { amount: (currencieFrom.value / currencieTo.value) * amount };
     } catch (error) {
       throw new Error();
     }
