@@ -12,7 +12,10 @@ describe('CurrenciesService', () => {
         CurrenciesService,
         {
           provide: CurrenciesRepository,
-          useFactory: () => ({ getCurrency: jest.fn() }),
+          useFactory: () => ({
+            getCurrency: jest.fn(),
+            createCurrency: jest.fn(),
+          }),
         },
       ],
     }).compile();
@@ -51,6 +54,31 @@ describe('CurrenciesService', () => {
       });
 
       expect(await service.getCurrency('BRL')).toEqual({
+        currency: 'BRL',
+        value: 1,
+      });
+    });
+  });
+
+  describe('createCurrency()', () => {
+    it('should throw if repository throw', async () => {
+      (repository.createCurrency as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException(),
+      );
+      await expect(
+        service.createCurrency({ currency: 'BRL', value: 1 }),
+      ).rejects.toThrow(new InternalServerErrorException());
+    });
+
+    it('should not throw if repository returns', async () => {
+      await expect(
+        service.createCurrency({ currency: 'BRL', value: 1 }),
+      ).resolves.not.toThrow();
+    });
+
+    it('should repository has been called with right params', async () => {
+      await service.createCurrency({ currency: 'BRL', value: 1 });
+      expect(repository.createCurrency).toHaveBeenCalledWith({
         currency: 'BRL',
         value: 1,
       });
