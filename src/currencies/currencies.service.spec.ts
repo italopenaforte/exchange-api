@@ -1,21 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CurrenciesRepository, CurrenciesService } from './currencies.service';
-import { InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 describe('CurrenciesService', () => {
   let service: CurrenciesService;
   let repository: CurrenciesRepository;
 
   beforeEach(async () => {
+    const currenciesRepositoryMock = {
+      getCurrency: jest.fn(),
+      createCurrency: jest.fn(),
+      updateCurrency: jest.fn(),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CurrenciesService,
         {
           provide: CurrenciesRepository,
-          useFactory: () => ({
-            getCurrency: jest.fn(),
-            createCurrency: jest.fn(),
-          }),
+          useFactory: () => currenciesRepositoryMock,
         },
       ],
     }).compile();
@@ -79,6 +84,39 @@ describe('CurrenciesService', () => {
     it('should repository has been called with right params', async () => {
       await service.createCurrency({ currency: 'BRL', value: 1 });
       expect(repository.createCurrency).toHaveBeenCalledWith({
+        currency: 'BRL',
+        value: 1,
+      });
+    });
+
+    it('should throw if value is less or equal to 0', async () => {
+      await expect(
+        service.createCurrency({ currency: 'BRL', value: 0 }),
+      ).rejects.toThrow(
+        new BadRequestException('The value must be greater than zero.'),
+      );
+    });
+  });
+
+  describe('updateCurrency()', () => {
+    it('should throw if repository throw', async () => {
+      (repository.updateCurrency as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException(),
+      );
+      await expect(
+        service.updateCurrency({ currency: 'BRL', value: 1 }),
+      ).rejects.toThrow(new InternalServerErrorException());
+    });
+
+    it('should not throw if repository returns', async () => {
+      await expect(
+        service.updateCurrency({ currency: 'BRL', value: 1 }),
+      ).resolves.not.toThrow();
+    });
+
+    it('should repository has been called with right params', async () => {
+      await service.updateCurrency({ currency: 'BRL', value: 1 });
+      expect(repository.updateCurrency).toHaveBeenCalledWith({
         currency: 'BRL',
         value: 1,
       });
