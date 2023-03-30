@@ -121,5 +121,30 @@ describe('CurrenciesService', () => {
         value: 1,
       });
     });
+
+    it('should throw if value is less or equal to 0', async () => {
+      await expect(
+        service.updateCurrency({ currency: 'BRL', value: 0 }),
+      ).rejects.toThrow(
+        new BadRequestException('The value must be greater than zero.'),
+      );
+    });
+
+    it('should be return when repository return', async () => {
+      (repository.updateCurrency as jest.Mock).mockResolvedValue({
+        currency: 'BRL',
+        value: 2,
+      });
+
+      expect(
+        await service.updateCurrency({
+          currency: 'BRL',
+          value: 2,
+        }),
+      ).toEqual({
+        currency: 'BRL',
+        value: 2,
+      });
+    });
   });
 });
